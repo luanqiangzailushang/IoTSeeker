@@ -118,6 +118,13 @@ sub check_login {
 							print "device $ctx->{ip} of type $ctx->{devType} has changed password\n";
 						}
 						$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();}
+					} elsif ($dev->{auth}->[4] eq "substr") {
+						if (index($body, $dev->{auth}->[5]) >= 0) {
+							print "device $ctx->{ip} is of type $ctx->{devType} still has default password\n";
+						} else {
+							print "device $ctx->{ip} of type $ctx->{devType} has changed password\n";
+						}
+						$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();
 					}
 				} 
 			};
