@@ -72,10 +72,12 @@ sub check_login {
 				my $status = $_[1]->{Status};
 				if ($status == 200) {
 					print "device $ctx->{ip} is of type $ctx->{devType} still has default password\n";
+					post_list_add($ctx->{ip},$ctx->{devType},1);
 				} else {
 					print "device $ctx->{ip} of type $ctx->{devType} has changed password\n";
+					post_list_add($ctx->{ip},$ctx->{devType},0);
 				}
-				$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();}
+				$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 			};
 			return;
 		}
@@ -107,24 +109,31 @@ sub check_login {
 						$pattern = $dev->{auth}->[5];
 						if ($body =~ /$pattern/) {
 							print "device $ctx->{ip} is of type $ctx->{devType} still has default password\n";
+							post_list_add($ctx->{ip},$ctx->{devType},1);
 						} else {
 							print "device $ctx->{ip} of type $ctx->{devType} has changed password\n";
+							post_list_add($ctx->{ip},$ctx->{devType},0);
 						}
-						$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();}
+						$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 					} elsif ($dev->{auth}->[4] eq "!substr") {
+						if($debug){print "body=$body\n"};
 						if (index($body, $dev->{auth}->[5]) < 0) {
 							print "device $ctx->{ip} is of type $ctx->{devType} still has default password\n";
+							post_list_add($ctx->{ip},$ctx->{devType},1);
 						} else {
 							print "device $ctx->{ip} of type $ctx->{devType} has changed password\n";
+							post_list_add($ctx->{ip},$ctx->{devType},0);
 						}
-						$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();}
+						$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 					} elsif ($dev->{auth}->[4] eq "substr") {
 						if (index($body, $dev->{auth}->[5]) >= 0) {
 							print "device $ctx->{ip} is of type $ctx->{devType} still has default password\n";
+							post_list_add($ctx->{ip},$ctx->{devType},1);
 						} else {
 							print "device $ctx->{ip} of type $ctx->{devType} has changed password\n";
+							post_list_add($ctx->{ip},$ctx->{devType},0);
 						}
-						$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();
+						$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 					}
 				} 
 			};
@@ -140,17 +149,21 @@ sub check_login {
 		if ($status == 200) {
 			if ($ctx->{dev}->{auth}->[0] eq "basic") {
 				print "device $ctx->{ip} is of type $ctx->{devType} still has default password\n";
+				post_list_add($ctx->{ip},$ctx->{devType},1);
 			} elsif ($ctx->{dev}->{auth}->[0] eq "expect200") {
 				print "device $ctx->{ip} is of type $ctx->{devType}  doesnot have any password\n";
+				post_list_add($ctx->{ip},$ctx->{devType},2);
 			}
 		} elsif ($status == 301 || $status == 302) {
 			print "device $ctx->{ip} is of type $ctx->{devType} still has default password\n";
+			post_list_add($ctx->{ip},$ctx->{devType},1);
 		} elsif ($status == 401 && $ctx->{dev}->{auth}->[0] eq "basic") {
 			print "device $ctx->{ip} is of type $ctx->{devType} has changed password\n";
+			post_list_add($ctx->{ip},$ctx->{devType},0);
 		} else {
 			print "device $ctx->{ip}: unexpected resp code $status\n";
 		}
-		$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();}
+		$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 	};
 }
 
@@ -218,6 +231,7 @@ sub search4devType { #with $body and $header
 
 sub check {
 	my $ctx = shift;
+	print "shift=$ctx->{ip}\n";
 	my $url = composeURL($ctx);
 	if ($ctx->{stage} eq "initialClickLoginPage") {
 		return check_init_login($ctx);
@@ -234,7 +248,7 @@ sub check {
 			$devType = search4devType();
 			if ($devType eq "") {
 				print "$ctx->{ip}: didnot find dev type after trying all devices\n";
-				$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();}
+				$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 				kickoff();
 				return;
 			}
@@ -263,7 +277,7 @@ sub check {
 			}
 		} elsif ($status == 404) {
 			print "canot find dev type for $ctx->{ip} due to 404 response\n";
-			$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();}
+			$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 			return;
 		} else {
 			if ($status == 595) {
@@ -271,13 +285,13 @@ sub check {
 			} else {
 				print "unexpected status code $status for ip $ctx->{ip}\n";
 			}
-			$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();}
+			$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 			return;
 		}
 		$devType = search4devType();
 		if ($devType eq "") {
 			print "$ctx->{ip}: didnot find dev type after trying all devices\n";
-			$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();}
+			$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 			kickoff();
 			return;
 		}
@@ -361,7 +375,7 @@ sub search4login {
 	#print "devType=$devType|\n";
 	if ($devType eq "") { 
 		print "didnot find devType for $ctx->{ip}\n";
-		$numOfResults ++; if ($numOfResults == $numOfIps) { exit;} else {kickoff();}
+		$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 		return; }
 	my $pattern = $devs->{$devType}->{loginUrlPattern};
 	#printf "%d pattern=$pattern\n", length($body);
@@ -372,7 +386,42 @@ sub search4login {
 	return "";
 }
 
+@list_post = ();
+sub post_list_add{
+	
+	$center_point = { 
+	ip => shift, 
+	name => shift,
+	state => shift,
+	};
+	
+	push(@list_post, $center_point);
+	
+	if($debug){
+		#print "list_post=@list_post\n";
+		print "\n";
+		print "\n";
+	}
+}
+sub my_http_post{
+	$url="https://6d2b1455-7589-401a-bf7b-f05cf615033a.mock.pstmn.io/postapi";
+	$postdata=encode_json(\@list_post);
+	if($debug){
+		print "url=$url, postdata=$postdata\n";
+	}
+	http_post $url, $postdata, sub {
+		my $status = $_[1]->{Status};
+		if($debug){
+			print "url=$url, postdata=$postdata, status=$status\n";
+			print "body=$_[0]\n";
+		}
+		exit;
+	}
+}
+
+
 sub readDevices {
+	
 	#open FD, "devices.cfg" || die "Failed to open devices.cfg $!\n";
 	if ($devCfgUrl ne "") {
 		#partially from http://www.perlmonks.org/?node_id=1078704
