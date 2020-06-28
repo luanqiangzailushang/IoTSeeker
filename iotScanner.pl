@@ -13,8 +13,9 @@ my $ptr = -1;
 my $httpPort = 80;
 my $debug = 0;
 my $ip = $ARGV[0];
+my $post_url = $ARGV[1];
 if ($ARGV[0] =~ /^\-?h/) {
-	print "perl iotScanner.pl <ipRanges> [devCfgUrl=<devCfgUrl>]\n";
+	print "perl iotScanner.pl <ipRanges> post_url [devCfgUrl=<devCfgUrl>] \n";
 	exit;
 }
 my $devCfgUrl = "";
@@ -99,9 +100,10 @@ sub check_login {
 			$subtype = "";
 			$postdata = substitute($postdata, $ctx->{extractedData});
 		}
+		print __LINE__,"\n"  ;
 		if ($subtype eq "") {
 			http_post $url, $postdata, sub {
-				#print "body=$_[0]\n";
+				#print "1body=$_[0]\n";
 				my $status = $_[1]->{Status};
 				my $body = $_[0];
 				if ($dev->{auth}->[3] eq "body") {
@@ -116,7 +118,7 @@ sub check_login {
 						}
 						$numOfResults ++; if ($numOfResults == $numOfIps) { my_http_post();} else {kickoff();}
 					} elsif ($dev->{auth}->[4] eq "!substr") {
-						if($debug){print "body=$body\n"};
+						if($debug){print __LINE__,"body=$body\n"};
 						if (index($body, $dev->{auth}->[5]) < 0) {
 							print "device $ctx->{ip} is of type $ctx->{devType} still has default password\n";
 							post_list_add($ctx->{ip},$ctx->{devType},1);
@@ -404,16 +406,15 @@ sub post_list_add{
 	}
 }
 sub my_http_post{
-	$url="https://6d2b1455-7589-401a-bf7b-f05cf615033a.mock.pstmn.io/postapi";
 	$postdata=encode_json(\@list_post);
 	if($debug){
-		print "url=$url, postdata=$postdata\n";
+		print "post_url=$post_url, postdata=$postdata\n";
 	}
-	http_post $url, $postdata, sub {
+	http_post $post_url, $postdata, sub {
 		my $status = $_[1]->{Status};
 		if($debug){
-			print "url=$url, postdata=$postdata, status=$status\n";
-			print "body=$_[0]\n";
+			print __LINE__,"post_url=$post_url, postdata=$postdata, status=$status\n";
+			print __LINE__,"body=$_[0]\n";
 		}
 		exit;
 	}

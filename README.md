@@ -22,7 +22,7 @@ Here are the steps to install and run it:
 * Install perl packages by 
  * cpan AnyEvent::HTTP Data::Dumper JSON
 * perl iotScanner.pl <ipRanges>
-  * example:  perl iotScanner.pl 1.1.1.1-1.1.4.254,2.1.1.1-2.2.3.254
+  * example:  perl iotScanner.pl 1.1.1.1-1.1.4.254,2.1.1.1-2.2.3.254 post_url
   
   
 
